@@ -14,18 +14,60 @@ struct ContentView: View {
         "🚛", "🚛", "🚔", "🚔", "⛵️", "⛵️", "🚎", "🚎"
     ]
     
+    @State var cardCount = 4
+    
     var body: some View {
+        VStack {
+            ScrollView {
+                cards
+            }
+            Spacer()
+            cardCountAdjusters
+        }
+        .padding()
+    }
+    
+    var cards: some View {
         HStack {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-                ForEach(0..<vehicles.count, id: \.self) { index in
+                ForEach(0..<cardCount, id: \.self) { index in
                     CardView(content: vehicles[index])
                         .aspectRatio(2/3, contentMode: .fit)
                 }
             }
         }
         .foregroundColor(.orange)
-        .padding()
     }
+    
+    var cardCountAdjusters: some View {
+        HStack {
+            cardAdder
+            Spacer()
+            cardRemover
+        }
+        .imageScale(.large)
+        .font(.largeTitle)
+    }
+    
+    func cardCountAdjuster(by offset: Int, symbol: String) -> some View {
+        Button(action: {
+            cardCount += offset
+        }, label: {
+            VStack {
+                Image(systemName: symbol)
+            }
+        })
+        .disabled(cardCount + offset < 1 || cardCount + offset > vehicles.count)
+    }
+    
+    var cardAdder: some View {
+        cardCountAdjuster(by: 1, symbol: "rectangle.stack.fill.badge.plus")
+    }
+    
+    var cardRemover: some View {
+        cardCountAdjuster(by: -1, symbol: "rectangle.stack.fill.badge.minus")
+    }
+    
 }
 
 struct CardView: View {

@@ -8,66 +8,121 @@
 import SwiftUI
 
 struct ContentView: View {
-    var emojis: Array<String> = []
     let vehicles: Array<String> = [
         "✈️", "✈️", "🛻", "🛻", "🚜", "🚜", "🚗", "🚗",
         "🚛", "🚛", "🚔", "🚔", "⛵️", "⛵️", "🚎", "🚎"
     ]
+    let people: Array<String> = [
+        "🦹‍♀️", "🦹‍♀️", "🤷🏽‍♂️", "🤷🏽‍♂️", "💃🏿", "💃🏿", "🕺🏻", "🕺🏻",
+        "🏋️‍♂️", "🏋️‍♂️", "🤸‍♀️", "🤸‍♀️", "👨🏼‍🦳", "👨🏼‍🦳", "💂🏻‍♀️", "💂🏻‍♀️",
+        "👩‍🦽", "👩‍🦽", "🦸🏻‍♀️", "🦸🏻‍♀️", "🧑🏽‍🔧", "🧑🏽‍🔧", "🏃🏿‍♀️", "🏃🏿‍♀️",
+        "🤹🏻‍♂️", "🤹🏻‍♂️", "🚴🏻‍♀️", "🚴🏻‍♀️", "🥷", "🥷", "🧙🏼‍♂️", "🧙🏼‍♂️"
+    ]
+    let techs: Array<String> = [
+        "💻", "💻", "📱", "📱", "⌚️", "⌚️", "🖥️", "🖥️",
+        "🖨️", "🖨️", "☎️", "☎️", "📀", "📀", "💾", "💾",
+        "📡", "📡", "🕹️", "🕹️", "📷", "📷", "📻", "📻"
+    ]
     
-    @State var cardCount = 4
+    @State var emojis: Array<String>
+    @State var cardCount: Int
+    @State var themeColor: Color
+    
+    init() {
+        self.emojis = self.vehicles.shuffled()
+        self.cardCount = self.vehicles.count
+        self.themeColor = .red
+    }
     
     var body: some View {
         VStack {
+            title
             ScrollView {
                 cards
             }
             Spacer()
-            cardCountAdjusters
+            themeSelector
         }
         .padding()
     }
     
+    var title: some View {
+        Text("Memorize!")
+            .font(.largeTitle)
+            .fontWeight(.bold)
+    }
+    
     var cards: some View {
         HStack {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))]) {
-                ForEach(0..<cardCount, id: \.self) { index in
-                    CardView(content: vehicles[index])
-                        .aspectRatio(2/3, contentMode: .fit)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))]) {
+                ForEach(0..<emojis.count, id: \.self) { index in
+                    CardView(content: emojis[index])
+                        .aspectRatio(2/3, contentMode: .fill)
                 }
             }
         }
-        .foregroundColor(.orange)
+        .foregroundColor(themeColor)
     }
     
-    var cardCountAdjusters: some View {
+    var themeSelector: some View {
         HStack {
-            cardAdder
-            Spacer()
-            cardRemover
+            themeSelector(theme: "Vehicles", symbol: "car.fill")
+            themeSelector(theme: "People", symbol: "person.crop.circle.fill")
+            themeSelector(theme: "Tech", symbol: "desktopcomputer")
         }
-        .imageScale(.large)
-        .font(.largeTitle)
     }
     
-    func cardCountAdjuster(by offset: Int, symbol: String) -> some View {
+    func themeSelector(theme: String, symbol: String) -> some View {
         Button(action: {
-            cardCount += offset
+            switch theme {
+            case "People":
+                let bounds = randomCardCount(from: people)
+                emojis = people[bounds.0..<bounds.1].shuffled()
+                themeColor = .purple
+            case "Tech":
+                let bounds = randomCardCount(from: techs)
+                emojis = techs[bounds.0..<bounds.1].shuffled()
+                themeColor = .blue
+            default:
+                let bounds = randomCardCount(from: vehicles)
+                emojis = vehicles[bounds.0..<bounds.1].shuffled()
+                themeColor = .red
+            }
+            
+            cardCount = emojis.count
         }, label: {
             VStack {
                 Image(systemName: symbol)
+                Text(theme)
             }
         })
-        .disabled(cardCount + offset < 1 || cardCount + offset > vehicles.count)
+        .imageScale(.large)
+        .font(.callout)
     }
     
-    var cardAdder: some View {
-        cardCountAdjuster(by: 1, symbol: "rectangle.stack.fill.badge.plus")
+    func randomCardCount(from array: Array<String>) -> (Int, Int) {
+        let size = array.count
+        let mid = (floor(Double(size) / 2) - 1)
+        print(mid)
+        
+        var lowerBound = Int.random(in: 0...Int(mid))
+        if lowerBound % 2 != 0 {
+            lowerBound = lowerBound + 1
+        }
+        
+        var upperBound: Int = Int.random(in: lowerBound...size)
+        if upperBound - lowerBound < 4 {
+            upperBound = lowerBound + 4
+        }
+        
+        if upperBound % 2 != 0 {
+            upperBound = upperBound + 1
+        }
+        
+        print("lowerBound: \(lowerBound), upperBound: \(upperBound)")
+        
+        return (lowerBound, upperBound)
     }
-    
-    var cardRemover: some View {
-        cardCountAdjuster(by: -1, symbol: "rectangle.stack.fill.badge.minus")
-    }
-    
 }
 
 struct CardView: View {

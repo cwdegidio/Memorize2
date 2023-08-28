@@ -54,10 +54,13 @@ struct ContentView: View {
     
     var cards: some View {
         HStack {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))]) {
-                ForEach(0..<emojis.count, id: \.self) { index in
-                    CardView(content: emojis[index])
-                        .aspectRatio(2/3, contentMode: .fill)
+            GeometryReader { geometry in
+                let cardWidth = widthThatBestFits(cardCount: emojis.count, screenWidth: geometry.size.width)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: cardWidth))]) {
+                    ForEach(0..<emojis.count, id: \.self) { index in
+                        CardView(content: emojis[index])
+                            .aspectRatio(2/3, contentMode: .fill)
+                    }
                 }
             }
         }
@@ -77,7 +80,7 @@ struct ContentView: View {
             switch theme {
             case "People":
                 let bounds = randomCardCount(from: people)
-                emojis = people[bounds.0..<bounds.1].shuffled()
+                emojis = people[bounds.lbound..<bounds.ubound].shuffled()
                 themeColor = .purple
             case "Tech":
                 let bounds = randomCardCount(from: techs)
@@ -100,10 +103,9 @@ struct ContentView: View {
         .font(.callout)
     }
     
-    func randomCardCount(from array: Array<String>) -> (Int, Int) {
+    func randomCardCount(from array: Array<String>) -> (lbound: Int, ubound: Int) {
         let size = array.count
         let mid = (floor(Double(size) / 2) - 1)
-        print(mid)
         
         var lowerBound = Int.random(in: 0...Int(mid))
         if lowerBound % 2 != 0 {
@@ -121,7 +123,30 @@ struct ContentView: View {
         
         print("lowerBound: \(lowerBound), upperBound: \(upperBound)")
         
-        return (lowerBound, upperBound)
+        return (lbound: lowerBound, ubound: upperBound)
+    }
+    
+    func widthThatBestFits(cardCount: Int, screenWidth: CGFloat) -> CGFloat {
+        var cardWidth: CGFloat = 0
+        
+        if cardCount >= 30 {
+            cardWidth = screenWidth / 8
+        } else if cardCount >= 24 {
+            cardWidth = screenWidth / 6
+        } else if cardCount >= 16 {
+            cardWidth = screenWidth / 4
+        } else if cardCount >= 8 {
+            cardWidth = screenWidth / 3
+        } else {
+            cardWidth = screenWidth / 2
+        }
+        
+        print("cardWidth: \(cardWidth)")
+        
+//        @Environment(\.displayScale) var displayScale
+//        print("displayScale: \(displayScale)")
+        
+        return cardWidth - 20
     }
 }
 
